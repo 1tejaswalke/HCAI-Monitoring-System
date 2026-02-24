@@ -1,22 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Driver Monitoring System</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human-Centered AI | Advanced DMS</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #00f2ff;
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+}
+
+header {
+    padding: 20px;
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif;
+    margin: 5px 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #ccc;
+}
+
+a {
+    color: #00f2ff;
+    text-decoration: none;
+}
+
+.dashboard {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    flex-wrap: wrap;
+}
+
+video {
+    border: 3px solid #00f2ff;
+    border-radius: 15px;
+    box-shadow: 0 0 25px #00f2ff;
+    width: 100%;
+    max-width: 400px;
+}
+
+.panel {
+    background: rgba(0,0,0,0.6);
+    padding: 20px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 0 20px #00f2ff;
+}
+
+.metric {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.status {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.safe { color: #00ff88; }
+.drowsy { color: #ff0033; }
+.warning { color: #ffaa00; }
+
+.parameters {
+    text-align: left;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+canvas {
+    margin-top: 15px;
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
 </head>
+
 <body>
 
-<h1>AI Driver Monitoring System</h1>
+<header>
+    <h1>Advanced Human-Centered Driver Monitoring System</h1>
+    <div class="subtitle">Developed by Tejas Walke</div>
+    <div><a href="https://www.linkedin.com/in/tejas-walke-5422a1255/" target="_blank">Connect on LinkedIn</a></div>
+</header>
 
-<video id="video" autoplay playsinline></video>
-<br><br>
-<button onclick="start()">Start Monitoring</button>
+<div class="dashboard">
 
-<br><br>
-<a href="/download-report">
-    <button>Download Session Report</button>
-</a>
+    <video id="video" autoplay playsinline></video>
 
-<script src="/static/dashboard.js"></script>
+    <div class="panel">
+        <div class="metric">Eye Aspect Ratio (EAR): <strong><span id="earValue">0.00</span></strong></div>
+        <div class="metric">Head Direction: <strong><span id="headPose">CENTER</span></strong></div>
+        <div class="metric">Fatigue Threshold: <strong>EAR &lt; 0.25</strong></div>
+        <div class="status safe" id="status">SAFE</div>
+
+        <canvas id="earChart" height="150"></canvas>
+
+        <div class="parameters">
+            <strong>Monitoring Parameters:</strong><br>
+            • EAR-based Eye Closure Detection<br>
+            • Head Pose (Left / Right / Center)<br>
+            • Real-Time Fatigue Classification<br>
+            • Live EAR Trend Graph<br>
+            • Frame-by-Frame Behavioral Analysis
+        </div>
+    </div>
+
+</div>
+
+<script>
+const video = document.getElementById("video");
+const earDisplay = document.getElementById("earValue");
+const statusDisplay = document.getElementById("status");
+const headDisplay = document.getElementById("headPose");
+
+let earData = [];
+let labels = [];
+
+const ctx = document.getElementById("earChart").getContext("2d");
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'EAR Trend',
+            data: earData,
+            borderColor: '#00f2ff',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3
+        }]
+    },
+    options: {
+        animation: false,
+        scales: { y: { min: 0, max: 0.5 } },
+        plugins: { legend: { display: false } }
+    }
+});
+
+async function setupCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    video.srcObject = stream;
+}
+
+async function loadModel() {
+    await tf.setBackend("webgl");
+    return await faceLandmarksDetection.load(
+        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+    );
+}
+
+function calculateEAR(landmarks) {
+    const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+    const A = dist(landmarks[160], landmarks[144]);
+    const B = dist(landmarks[158], landmarks[153]);
+    const C = dist(landmarks[33], landmarks[133]);
+    return (A+B)/(2*C);
+}
+
+function estimateHeadPose(landmarks) {
+    const left = landmarks[33];
+    const right = landmarks[263];
+    const nose = landmarks[1];
+    const midX = (left.x + right.x) / 2;
+    const offset = nose.x - midX;
+
+    if (offset > 20) return "RIGHT";
+    if (offset < -20) return "LEFT";
+    return "CENTER";
+}
+
+function updateGraph(ear) {
+    if (earData.length > 40) {
+        earData.shift();
+        labels.shift();
+    }
+    earData.push(ear);
+    labels.push("");
+    chart.update();
+}
+
+async function detect(model) {
+    const predictions = await model.estimateFaces({input: video});
+
+    if (predictions.length > 0) {
+        const landmarks = predictions[0].scaledMesh.map(p => ({x:p[0], y:p[1]}));
+        const ear = calculateEAR(landmarks);
+        const headPose = estimateHeadPose(landmarks);
+        const drowsy = ear < 0.25;
+
+        earDisplay.innerText = ear.toFixed(2);
+        headDisplay.innerText = headPose;
+        updateGraph(ear);
+
+        if (drowsy) {
+            statusDisplay.innerText = "DROWSY";
+            statusDisplay.className = "status drowsy";
+        } else if (headPose !== "CENTER") {
+            statusDisplay.innerText = "DISTRACTED";
+            statusDisplay.className = "status warning";
+        } else {
+            statusDisplay.innerText = "SAFE";
+            statusDisplay.className = "status safe";
+        }
+    }
+
+    requestAnimationFrame(() => detect(model));
+}
+
+async function main() {
+    await setupCamera();
+    const model = await loadModel();
+    detect(model);
+}
+
+main();
+</script>
 
 </body>
 </html>
