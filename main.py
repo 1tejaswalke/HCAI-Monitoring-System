@@ -28,7 +28,14 @@ RIGHT_EYE = [362,385,387,263,373,380]
 MOUTH = [13,14,78,308,82,312]
 
 mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh()
+
+face_mesh = mp_face_mesh.FaceMesh(
+    static_image_mode=False,
+    max_num_faces=1,
+    refine_landmarks=True,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5
+)
 
 LOG_FILE = "dms_log.csv"
 
