@@ -1,5 +1,5 @@
 // ======================================================
-// HCAI - Parametric Emotion & Fatigue Model (Improved)
+// HCAI - Emotion & Fatigue Model 
 // ======================================================
 
 let model;
@@ -9,7 +9,7 @@ let closedStartTime = null;
 let lastAlertTime = 0;
 
 const FATIGUE_DURATION_MS = 1500;
-const ALERT_COOLDOWN = 3000; // prevent sound spam
+const ALERT_COOLDOWN = 3000;
 
 // UI Elements
 const earText = document.getElementById("earValue");
@@ -46,6 +46,8 @@ function dist(a, b) {
 }
 
 // ================= FEATURES =================
+
+// EAR
 function computeEAR(p) {
     const A = dist(p[159], p[145]);
     const B = dist(p[158], p[153]);
@@ -53,13 +55,21 @@ function computeEAR(p) {
     return (A + B) / (2 * C);
 }
 
+// MAR
 function computeMAR(p) {
-    const A = dist(p[13], p[14]);     // vertical
-    const B = dist(p[78], p[308]);    // horizontal
+    const A = dist(p[13], p[14]);
+    const B = dist(p[78], p[308]);
     return A / B;
 }
 
-// ================= HEAD =================
+// Eyebrow Compression (Normalized)
+function computeBrowNorm(p) {
+    const browDist = Math.abs(p[65][0] - p[295][0]);
+    const faceWidth = Math.abs(p[234][0] - p[454][0]);
+    return browDist / faceWidth;
+}
+
+// Head Direction
 function getHeadDirection(p) {
     const left = p[33][0];
     const right = p[263][0];
@@ -73,10 +83,10 @@ function getHeadDirection(p) {
 }
 
 // ================= CLASSIFICATION =================
-function classifyState(ear, mar) {
+function classifyState(ear, mar, browNorm) {
 
     // ===== FATIGUE (Eye Closure Time) =====
-    if (ear < 0.25) {
+    if (ear < 0.20) {
         if (!closedStartTime) {
             closedStartTime = Date.now();
         }
@@ -89,21 +99,27 @@ function classifyState(ear, mar) {
     }
 
     // ===== FATIGUE (Yawning) =====
-    if (mar > 0.45) {
+    if (mar > 0.55) {
         return { state: "Fatigue", prob: 90 };
     }
 
+    // ===== ANGER (FIXED) =====
+    if (
+        ear < 0.24 &&
+        mar < 0.22 &&
+        browNorm < 0.35
+    ) {
+        return { state: "Anger", prob: 90 };
+    }
+
     // ===== NEUTRAL =====
-    if (ear >= 0.25 && ear <= 0.40 && mar >= 0.25 && mar <= 0.40) {
+    if (
+        ear >= 0.23 && ear <= 0.30 &&
+        mar >= 0.20 && mar <= 0.30
+    ) {
         return { state: "Neutral", prob: 80 };
     }
 
-    // ===== ANGER =====
-    if (ear >= 0.20 && ear <= 0.25 && mar >= 0.15 && mar <= 0.25) {
-        return { state: "Anger", prob: 85 };
-    }
-
-    // ===== DEFAULT =====
     return { state: "Neutral", prob: 60 };
 }
 
@@ -118,9 +134,10 @@ async function detectLoop() {
 
         const ear = computeEAR(mesh);
         const mar = computeMAR(mesh);
+        const browNorm = computeBrowNorm(mesh);
         const headDir = getHeadDirection(mesh);
 
-        const emotion = classifyState(ear, mar);
+        const emotion = classifyState(ear, mar, browNorm);
 
         // ===== FATIGUE SCORE =====
         let fatigueScore = 0;
@@ -141,6 +158,7 @@ async function detectLoop() {
 
         // ===== ALERT CONTROL =====
         if (emotion.state === "Fatigue") {
+
             statusText.innerText = "HIGH FATIGUE";
             statusText.className = "status drowsy";
 
@@ -148,6 +166,7 @@ async function detectLoop() {
                 alertSound.play();
                 lastAlertTime = Date.now();
             }
+
         } else {
             statusText.innerText = emotion.state.toUpperCase();
             statusText.className = "status safe";
