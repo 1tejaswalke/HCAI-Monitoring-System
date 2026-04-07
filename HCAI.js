@@ -60,14 +60,14 @@ function getHeadDirection(p){
     const center = (left+right)/2;
     const offset = nose-center;
 
-    if(offset>15) return "RIGHT";
-    if(offset<-15) return "LEFT";
+    if(offset>15) return "LEFT";
+    if(offset<-15) return "RIGHT";
     return "CENTER";
 }
 
 function classifyState(ear, mar){
 
-    if(ear < 0.18){
+    if(ear < 0.20){
         if(!closedStartTime){
             closedStartTime = Date.now();
         }
@@ -79,11 +79,11 @@ function classifyState(ear, mar){
     
     }
 
-    if(ear >= 0.21 && ear <= 0.35 && mar >= 0.21 && mar <= 0.35){
+    if(ear >= 0.23 && ear <= 0.35 && mar >= 0.21 && mar <= 0.35){
         return {state:"Neutral", prob:75};
     }
 
-    if(ear >= 0.20 && ear <= 0.25 && mar >= 0.15 && mar <= 0.20){
+    if(ear >= 0.18 && ear <= 0.25 && mar >= 0.15 && mar <= 0.20){
         return {state:"Anger", prob:85};
     }
 
