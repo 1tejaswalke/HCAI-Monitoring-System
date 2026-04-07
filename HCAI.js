@@ -67,7 +67,7 @@ function getHeadDirection(p){
 
 function classifyState(ear, mar){
 
-    if(ear < 0.20){
+    if(ear < 0.18){
         if(!closedStartTime){
             closedStartTime = Date.now();
         }
@@ -76,21 +76,14 @@ function classifyState(ear, mar){
         }
     } else {
         closedStartTime = null;
+    
     }
 
-    if(ear >= 0.25 && ear <= 0.30 && mar >= 0.35 && mar <= 0.50){
-        return {state:"Happy", prob:85};
-    }
-
-    if(ear >= 0.23 && ear <= 0.28 && mar >= 0.20 && mar <= 0.30){
+    if(ear >= 0.21 && ear <= 0.35 && mar >= 0.21 && mar <= 0.35){
         return {state:"Neutral", prob:75};
     }
 
-    if(ear >= 0.22 && ear <= 0.26 && mar >= 0.15 && mar <= 0.25){
-        return {state:"Stress", prob:80};
-    }
-
-    if(ear >= 0.20 && ear <= 0.25 && mar >= 0.15 && mar <= 0.22){
+    if(ear >= 0.20 && ear <= 0.25 && mar >= 0.15 && mar <= 0.20){
         return {state:"Anger", prob:85};
     }
 
