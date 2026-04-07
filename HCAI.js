@@ -76,7 +76,7 @@ function getHeadDirection(p) {
 function classifyState(ear, mar) {
 
     // ===== FATIGUE (Eye Closure Time) =====
-    if (ear < 0.20) {
+    if (ear < 0.25) {
         if (!closedStartTime) {
             closedStartTime = Date.now();
         }
@@ -94,7 +94,7 @@ function classifyState(ear, mar) {
     }
 
     // ===== NEUTRAL =====
-    if (ear >= 0.25 && ear <= 0.35 && mar >= 0.25 && mar <= 0.40) {
+    if (ear >= 0.25 && ear <= 0.40 && mar >= 0.25 && mar <= 0.40) {
         return { state: "Neutral", prob: 80 };
     }
 
