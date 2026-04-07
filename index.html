@@ -138,14 +138,12 @@ Connect on LinkedIn
 
 <div class="description">
 <strong>Project Overview:</strong><br><br>
-HCAI (Human Centered Artificial Intelligence) is a real-time driver monitoring system designed to analyze facial behavior using computer vision and parametric state modeling. 
-The system measures Eye Aspect Ratio (EAR), Mouth Aspect Ratio (MAR), blink rate, head orientation, and sustained eye closure to classify driver states into Happy, Neutral, Stress, Anger, and Fatigue categories.
+HCAI Monitoring System is a Human-Centered AI-based solution designed for real-time driver state monitoring using facial behavior analysis. The system leverages computer vision techniques to continuously analyze facial features and detect critical driver conditions such as fatigue, drowsiness, and reduced attention levels. By extracting geometric features like Eye Aspect Ratio (EAR), Mouth Aspect Ratio (MAR), and temporal metrics such as PERCLOS, the system ensures accurate and reliable detection of driver states.
+Unlike traditional approaches that rely solely on environmental sensing, this system focuses on the human factor, making it a key component for next-generation intelligent mobility solutions. The architecture is designed to operate in real time, providing low-latency feedback and ensuring immediate response to potentially dangerous situations.
+A core feature of the system is its adaptive Human-Machine Interface (HMI), which dynamically adjusts alerts and interactions based on the driver’s condition. This enables a more intuitive and context-aware user experience, reducing unnecessary distractions while enhancing safety.
+The system is scalable and designed to integrate seamlessly with Advanced Driver Assistance Systems (ADAS), allowing driver-state insights to contribute to broader vehicle decision-making. With validation across 300+ users, the system demonstrates robustness and practical applicability in real-world scenarios.
+Overall, the HCAI Monitoring System represents a step toward safer, smarter, and more human-aware automotive technologies.
 
-It applies temporal smoothing and stabilization logic to prevent rapid state switching, ensuring reliable and automotive-grade behavioral assessment. 
-Fatigue detection is prioritized as a safety-critical state and triggers alerts when sustained low EAR or abnormal blink patterns are detected.
-
-The system runs fully in-browser using TensorFlow.js and MediaPipe FaceMesh, making it privacy-friendly and deployable without backend infrastructure. 
-It demonstrates human-centered AI principles, explainable rule-based classification, and safety-focused monitoring suitable for next-generation intelligent cockpit systems.
 </div>
 
 <script src="HCAI.js"></script>
